@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finance Tracker — Новая транзакция</title>
+  <title>Finance Tracker — Редактировать транзакцию</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -37,11 +37,7 @@
     .user-sub { font-size: 11px; color: var(--muted); }
 
     .main { flex: 1; padding: 36px 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-
-    .form-wrap {
-      width: 100%;
-      max-width: 560px;
-    }
+    .form-wrap { width: 100%; max-width: 560px; }
 
     .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; width: 100%; }
     .back-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); text-decoration: none; font-size: 16px; transition: all 0.15s; flex-shrink: 0; }
@@ -49,28 +45,16 @@
     .page-title { font-family: var(--font-head); font-size: 32px; letter-spacing: -1px; line-height: 1.1; }
     .page-title .sub { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--muted); display: block; margin-top: 4px; }
 
-    /* Type toggle */
     .type-toggle { display: flex; gap: 0; background: var(--surface2); border-radius: 12px; padding: 5px; margin-bottom: 28px; }
     .type-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; background: none; font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; color: var(--muted); transition: all 0.2s; }
     .type-btn.active-expense { background: rgba(240,96,96,0.15); color: var(--danger); }
     .type-btn.active-income  { background: rgba(200,240,96,0.15); color: var(--accent); }
 
-    /* Amount hero */
     .amount-hero { text-align: center; margin-bottom: 32px; }
     .amount-label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
     .amount-input-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; }
     .amount-currency { font-family: var(--font-head); font-size: 36px; color: var(--muted); }
-    .amount-input {
-      font-family: var(--font-head);
-      font-size: 52px;
-      letter-spacing: -2px;
-      background: none;
-      border: none;
-      color: var(--text);
-      outline: none;
-      width: 260px;
-      text-align: center;
-    }
+    .amount-input { font-family: var(--font-head); font-size: 52px; letter-spacing: -2px; background: none; border: none; color: var(--text); outline: none; width: 260px; text-align: center; }
     .amount-input::placeholder { color: var(--border); }
     .amount-input.expense { color: var(--danger); }
     .amount-input.income  { color: var(--accent); }
@@ -78,7 +62,6 @@
     .amount-underline.expense { background: var(--danger); }
     .amount-underline.income  { background: var(--accent); }
 
-    /* Form card */
     .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
     .form-field { margin-bottom: 18px; }
     .form-field:last-child { margin-bottom: 0; }
@@ -88,14 +71,8 @@
     .form-input::placeholder { color: var(--muted); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-    /* Budget select custom */
     .budget-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-    .budget-option {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      padding: 12px 8px; border-radius: 10px;
-      background: var(--surface2); border: 1px solid transparent;
-      cursor: pointer; transition: all 0.15s; text-align: center;
-    }
+    .budget-option { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border-radius: 10px; background: var(--surface2); border: 1px solid transparent; cursor: pointer; transition: all 0.15s; text-align: center; }
     .budget-option:hover { border-color: var(--border); }
     .budget-option.selected { border-color: var(--accent); background: rgba(200,240,96,0.07); }
     .budget-option .b-icon { font-size: 22px; }
@@ -103,7 +80,10 @@
     .budget-option.selected .b-name { color: var(--text); }
     .budget-option .b-left { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
 
-    /* Submit */
+    .danger-zone { background: var(--surface); border: 1px solid rgba(240,96,96,0.25); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .danger-zone-text .title { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+    .danger-zone-text .desc { font-size: 12px; color: var(--muted); }
+
     .form-actions { display: flex; gap: 12px; }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 13px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
     .btn-primary { background: var(--accent); color: #0e0f11; flex: 1; }
@@ -111,8 +91,12 @@
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
     .btn-ghost:hover { background: var(--surface2); }
+    .btn-danger { background: rgba(240,96,96,0.12); color: var(--danger); border: 1px solid rgba(240,96,96,0.3); padding: 10px 18px; font-size: 13px; border-radius: 8px; }
+    .btn-danger:hover { background: rgba(240,96,96,0.2); }
 
-    /* Toast */
+    .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: transform 0.3s ease; z-index: 200; display: flex; align-items: center; gap: 8px; }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.success { border-color: rgba(200,240,96,0.3); color: var(--accent); }
@@ -150,65 +134,82 @@
     <div class="page-header">
       <a href="/transactions" class="back-btn">←</a>
       <h1 class="page-title">
-        Новая транзакция
-        <span class="sub">Заполните данные об операции</span>
+        Редактировать
+        <span class="sub" id="page-sub">Загрузка...</span>
       </h1>
     </div>
 
-    <!-- Тип -->
-    <div class="type-toggle">
-      <button class="type-btn active-expense" id="btn-expense" onclick="setType('expense')">↑ Расход</button>
-      <button class="type-btn"               id="btn-income"  onclick="setType('income')">↓ Доход</button>
+    <div id="loading-state">
+      <div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:28px"></div>
+      <div class="skeleton" style="height:100px;border-radius:14px;margin-bottom:32px"></div>
+      <div class="skeleton" style="height:200px;border-radius:14px;margin-bottom:16px"></div>
     </div>
 
-    <!-- Сумма -->
-    <div class="amount-hero">
-      <div class="amount-label">Сумма</div>
-      <div class="amount-input-wrap">
-        <span class="amount-currency">₽</span>
-        <input class="amount-input expense" id="f-amount" type="number" placeholder="0" min="0" step="1" />
+    <div id="form-content" style="display:none">
+      <!-- Тип -->
+      <div class="type-toggle">
+        <button class="type-btn" id="btn-expense" onclick="setType('expense')">↑ Расход</button>
+        <button class="type-btn" id="btn-income"  onclick="setType('income')">↓ Доход</button>
       </div>
-      <div class="amount-underline expense" id="amount-underline"></div>
-    </div>
 
-    <!-- Основные поля -->
-    <div class="form-card">
-      <div class="form-field">
-        <label class="form-label">Название</label>
-        <input class="form-input" id="f-name" type="text" placeholder="Например: Пятёрочка" />
+      <!-- Сумма -->
+      <div class="amount-hero">
+        <div class="amount-label">Сумма</div>
+        <div class="amount-input-wrap">
+          <span class="amount-currency">₽</span>
+          <input class="amount-input" id="f-amount" type="number" placeholder="0" min="1" step="1" />
+        </div>
+        <div class="amount-underline" id="amount-underline"></div>
       </div>
-      <div class="form-row">
+
+      <!-- Основные поля -->
+      <div class="form-card">
         <div class="form-field">
-          <label class="form-label">Дата</label>
-          <input class="form-input" id="f-date" type="date" />
+          <label class="form-label">Название</label>
+          <input class="form-input" id="f-name" type="text" placeholder="Например: Пятёрочка" />
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Дата</label>
+            <input class="form-input" id="f-date" type="date" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Время (опц.)</label>
+            <input class="form-input" id="f-time" type="time" />
+          </div>
         </div>
         <div class="form-field">
-          <label class="form-label">Время (опц.)</label>
-          <input class="form-input" id="f-time" type="time" />
+          <label class="form-label">Заметка</label>
+          <input class="form-input" id="f-note" type="text" placeholder="Молоко, хлеб, яйца..." />
         </div>
       </div>
-      <div class="form-field">
-        <label class="form-label">Заметка</label>
-        <input class="form-input" id="f-note" type="text" placeholder="Молоко, хлеб, яйца..." />
-      </div>
-    </div>
 
-    <!-- Выбор бюджета -->
-    <div class="form-card" id="budget-card">
-      <div class="form-field" style="margin-bottom:0">
-        <label class="form-label">Бюджет</label>
-        <div class="budget-options" id="budget-options">
-          <div style="color:var(--muted);font-size:13px">Загрузка...</div>
+      <!-- Выбор бюджета (только для расходов) -->
+      <div class="form-card" id="budget-card">
+        <div class="form-field" style="margin-bottom:0">
+          <label class="form-label">Бюджет</label>
+          <div class="budget-options" id="budget-options">
+            <div style="color:var(--muted);font-size:13px">Загрузка...</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Действия -->
-    <div class="form-actions">
-      <a href="/transactions" class="btn btn-ghost">Отмена</a>
-      <button class="btn btn-primary" id="submit-btn" onclick="submitTransaction()">
-        Сохранить расход
-      </button>
+      <!-- Опасная зона -->
+      <div class="danger-zone">
+        <div class="danger-zone-text">
+          <div class="title">Удалить транзакцию</div>
+          <div class="desc">Это действие нельзя отменить</div>
+        </div>
+        <button class="btn btn-danger" onclick="deleteTransaction()">Удалить</button>
+      </div>
+
+      <!-- Действия -->
+      <div class="form-actions">
+        <a href="/transactions" class="btn btn-ghost">Отмена</a>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitUpdate()">
+          Сохранить изменения
+        </button>
+      </div>
     </div>
 
   </div>
@@ -217,11 +218,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const fmt = n => Number(n).toLocaleString('ru-RU')
+  const fmt   = n => Number(n).toLocaleString('ru-RU')
+  const txId  = window.location.pathname.split('/')[2]
 
-  let txType      = 'expense'
+  let txType         = 'expense'
   let selectedBudgetId = null
-  let budgets     = []
+  let budgets        = []
+
+  if (!txId || isNaN(Number(txId))) {
+    showToast('Некорректный ID транзакции', 'error')
+  }
 
   // ─── Тип транзакции ────────────────────────────────────────────
   function setType(type) {
@@ -229,32 +235,31 @@
     document.getElementById('btn-expense').className =
       'type-btn' + (type === 'expense' ? ' active-expense' : '')
     document.getElementById('btn-income').className =
-      'type-btn' + (type === 'income' ? ' active-income' : '')
+      'type-btn' + (type === 'income'  ? ' active-income'  : '')
 
-    const amtInput = document.getElementById('f-amount')
+    const amtInput  = document.getElementById('f-amount')
     const underline = document.getElementById('amount-underline')
     amtInput.className    = 'amount-input ' + type
     underline.className   = 'amount-underline ' + type
 
     document.getElementById('budget-card').style.display =
       type === 'expense' ? '' : 'none'
-
-    document.getElementById('submit-btn').textContent =
-      type === 'expense' ? 'Сохранить расход' : 'Сохранить доход'
   }
 
   // ─── Рендер бюджетов ───────────────────────────────────────────
-  function renderBudgetOptions(list) {
+  function renderBudgetOptions(list, selectedId) {
     const wrap = document.getElementById('budget-options')
     wrap.innerHTML = list.map(b => {
       const left = b.limit - b.spent
+      const isSel = b.id === selectedId
       return `
-        <div class="budget-option" data-id="${b.id}" onclick="selectBudget(${b.id})">
-          <span class="b-icon">${b.icon}</span>
+        <div class="budget-option ${isSel ? 'selected' : ''}" data-id="${b.id}" onclick="selectBudget(${b.id})">
+          <span class="b-icon">${b.icon || '💰'}</span>
           <span class="b-name">${b.name}</span>
           <span class="b-left">${fmt(left)} ₽</span>
         </div>`
     }).join('')
+    if (selectedId) selectedBudgetId = selectedId
   }
 
   function selectBudget(id) {
@@ -264,67 +269,122 @@
     })
   }
 
-  // ─── Загрузка данных формы ─────────────────────────────────────
-  async function loadFormData() {
+  // ─── Загрузка транзакции и бюджетов ───────────────────────────
+  async function loadData() {
     try {
-      const res  = await fetch('/api/budgets')
-      const data = await res.json()
+      const [txRes, budgetsRes] = await Promise.all([
+        fetch(`/api/transactions/${txId}`),
+        fetch('/api/budgets'),
+      ])
+
+      if (!txRes.ok) {
+        if (txRes.status === 404) {
+          showToast('Транзакция не найдена', 'error')
+          setTimeout(() => window.location = '/transactions', 1500)
+          return
+        }
+        throw new Error(await txRes.text())
+      }
+
+      const tx   = await txRes.json()
+      const data = await budgetsRes.json()
 
       document.getElementById('user-avatar').textContent = data.user_name.slice(0,2).toUpperCase()
       document.getElementById('user-name').textContent   = data.user_name
+      document.getElementById('page-sub').textContent    = tx.Name || tx.name || ''
 
       budgets = data.budgets
-      renderBudgetOptions(budgets)
+      fillForm(tx, budgets)
+
+      document.getElementById('loading-state').style.display = 'none'
+      document.getElementById('form-content').style.display  = ''
+
     } catch(e) {
-      console.error('Ошибка загрузки бюджетов:', e)
+      showToast('Ошибка загрузки: ' + e.message, 'error')
     }
   }
 
-  // ─── Отправка ──────────────────────────────────────────────────
-  async function submitTransaction() {
+  function fillForm(tx, budgetList) {
+    const name     = tx.Name     ?? tx.name     ?? ''
+    const amount   = tx.Amount   ?? tx.amount   ?? 0
+    const isIncome = tx.IsIncome ?? tx.is_income ?? false
+    const note     = tx.Note     ?? tx.note     ?? ''
+    const date     = tx.Date     ?? tx.date     ?? ''
+    const vaultId  = tx.VaultId  ?? tx.budget_id ?? 0
+
+    setType(isIncome ? 'income' : 'expense')
+
+    document.getElementById('f-name').value   = name
+    document.getElementById('f-amount').value = amount
+    document.getElementById('f-note').value   = note
+
+    // Extract date and time from ISO string
+    const datePart = date.substring(0, 10)
+    const timePart = date.length >= 16 ? date.substring(11, 16) : ''
+    document.getElementById('f-date').value = datePart
+    if (timePart) document.getElementById('f-time').value = timePart
+
+    renderBudgetOptions(budgetList, vaultId)
+  }
+
+  // ─── Сохранение ────────────────────────────────────────────────
+  async function submitUpdate() {
     const amount = Number(document.getElementById('f-amount').value)
     const name   = document.getElementById('f-name').value.trim()
     const date   = document.getElementById('f-date').value
     const time   = document.getElementById('f-time').value
     const note   = document.getElementById('f-note').value.trim()
 
+    if (!name)             { showToast('Введите название', 'error'); return }
     if (!amount || amount <= 0) { showToast('Введите сумму', 'error'); return }
-    if (!name)                  { showToast('Введите название', 'error'); return }
-    if (!date)                  { showToast('Выберите дату', 'error'); return }
+    if (!date)             { showToast('Выберите дату', 'error'); return }
     if (txType === 'expense' && !selectedBudgetId) {
       showToast('Выберите бюджет', 'error'); return
     }
 
     const body = {
-      amount,
       name,
+      amount,
       note,
       is_income: txType === 'income',
-      budget_id: txType === 'expense' ? selectedBudgetId : null,
+      budget_id: txType === 'expense' ? selectedBudgetId : 0,
       date: time ? `${date}T${time}` : date,
     }
 
+    const btn = document.getElementById('submit-btn')
+    btn.disabled    = true
+    btn.textContent = 'Сохранение...'
+
     try {
-      const btn = document.getElementById('submit-btn')
-      btn.disabled = true
-      btn.textContent = 'Сохранение...'
-
-      const res = await fetch('/api/transactions', {
-        method: 'POST',
+      const res = await fetch(`/api/transactions/${txId}`, {
+        method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body:    JSON.stringify(body),
       })
-
       if (!res.ok) throw new Error(await res.text())
 
-      showToast('Транзакция добавлена ✓', 'success')
+      showToast('Изменения сохранены ✓', 'success')
       setTimeout(() => window.location = '/transactions', 800)
 
     } catch(e) {
       showToast('Ошибка: ' + e.message, 'error')
-      const btn = document.getElementById('submit-btn')
-      btn.disabled = false
-      btn.textContent = txType === 'expense' ? 'Сохранить расход' : 'Сохранить доход'
+      btn.disabled    = false
+      btn.textContent = 'Сохранить изменения'
+    }
+  }
+
+  // ─── Удаление ──────────────────────────────────────────────────
+  async function deleteTransaction() {
+    if (!confirm('Удалить транзакцию? Это действие нельзя отменить.')) return
+
+    try {
+      const res = await fetch(`/api/transactions/${txId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error(await res.text())
+
+      showToast('Транзакция удалена', 'success')
+      setTimeout(() => window.location = '/transactions', 800)
+    } catch(e) {
+      showToast('Ошибка удаления: ' + e.message, 'error')
     }
   }
 
@@ -332,14 +392,11 @@
   function showToast(msg, type = 'success') {
     const t = document.getElementById('toast')
     t.textContent = msg
-    t.className = `toast ${type} show`
+    t.className   = `toast ${type} show`
     setTimeout(() => t.classList.remove('show'), 2500)
   }
 
-  // ─── Инициализация ─────────────────────────────────────────────
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0]
-
-  loadFormData()
+  loadData()
 </script>
 </body>
 </html>

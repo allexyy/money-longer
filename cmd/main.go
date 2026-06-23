@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	db, err := storage.NewDB("file://migrations")
 	if err != nil {
 		log.Fatal("DB connection failed:", err)
@@ -21,22 +20,31 @@ func main() {
 	txStorage := storage.NewTransactionStorage(db)
 	vltStorage := storage.NewVaultsStorage(db)
 
-	txHandler := handler.NewTransactionHandler(txStorage, events)
+	txHandler := handler.NewTransactionHandler(txStorage, vltStorage, events)
 	vltHandler := handler.NewVaultHandler(vltStorage)
 	dHandler := handler.NewDashboardHandler(vltStorage, txStorage)
 
+	// Dashboard
 	http.HandleFunc("GET /api/dashboard", dHandler.Load)
 
+	// Budgets
 	http.HandleFunc("GET /api/budgets", vltHandler.GetAll)
 	http.HandleFunc("POST /api/budgets", vltHandler.Create)
-	http.HandleFunc("PATCH /api/budgets", vltHandler.Update)
+	http.HandleFunc("PUT /api/budgets/{id}", vltHandler.UpdateByID)
+	http.HandleFunc("DELETE /api/budgets/{id}", vltHandler.Delete)
 
-	http.HandleFunc("POST /api/transactions", txHandler.Create)
+	// Transactions
 	http.HandleFunc("GET /api/transactions", txHandler.GetAll)
+	http.HandleFunc("POST /api/transactions", txHandler.Create)
+	http.HandleFunc("GET /api/transactions/{id}", txHandler.GetByID)
+	http.HandleFunc("PUT /api/transactions/{id}", txHandler.Update)
+	http.HandleFunc("DELETE /api/transactions/{id}", txHandler.Delete)
 
-	http.HandleFunc("/budgets", pageHandler("./public/budgets.html"))
-	http.HandleFunc("/transactions/new", pageHandler("./public/transactions-new.html"))
-	http.HandleFunc("/transactions", pageHandler("./public/transactions.html"))
+	// Pages
+	http.HandleFunc("GET /budgets", pageHandler("./public/budgets.html"))
+	http.HandleFunc("GET /transactions/new", pageHandler("./public/transactions-new.html"))
+	http.HandleFunc("GET /transactions/{id}/edit", pageHandler("./public/transactions-edit.html"))
+	http.HandleFunc("GET /transactions", pageHandler("./public/transactions.html"))
 
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 
@@ -46,7 +54,8 @@ func main() {
 		}
 	}()
 
-	http.ListenAndServe(":8090", nil)
+	log.Println("Listening on :8090")
+	log.Fatal(http.ListenAndServe(":8090", nil))
 }
 
 func pageHandler(path string) http.HandlerFunc {

@@ -1,8 +1,6 @@
 package domain
 
-import (
-	"time"
-)
+import "time"
 
 type Vault struct {
 	ID         int
@@ -19,4 +17,5 @@ type VaultRepository interface {
 	GetById(id int) (*Vault, error)
 	Create(v Vault) error
 	Update(v Vault) error
+	Delete(id int) error
 }
