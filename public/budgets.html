@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Tracker — Бюджеты</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0f11; --surface: #16181c; --surface2: #1e2127;
+      --border: #2a2d35; --text: #e8e6e0; --muted: #6b6f7a;
+      --accent: #c8f060; --accent2: #f0a060; --accent3: #60b8f0; --danger: #f06060;
+      --radius: 14px;
+      --font-head: 'DM Serif Display', serif;
+      --font-body: 'Instrument Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+    html { font-size: 16px; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+
+    .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+    .logo { padding: 0 24px 32px; font-family: var(--font-head); font-size: 22px; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .nav-group { padding: 0 12px; flex: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); padding: 0 12px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none; transition: all 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent); color: #0e0f11; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-sep { height: 1px; background: var(--border); margin: 12px 12px; }
+    .sidebar-bottom { padding: 0 12px; }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface2); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #0e0f11; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-sub { font-size: 11px; color: var(--muted); }
+
+    .main { flex: 1; padding: 36px 40px; overflow-y: auto; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+    .page-title { font-family: var(--font-head); font-size: 32px; letter-spacing: -1px; line-height: 1.1; }
+    .page-title .sub { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--muted); display: block; margin-top: 4px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 9px; font-size: 13.5px; font-weight: 600; font-family: var(--font-body); cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #0e0f11; }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+
+    .summary-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+    .summary-card .label { font-size: 11.5px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+    .summary-card .value { font-family: var(--font-head); font-size: 24px; letter-spacing: -0.8px; }
+
+    .budgets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .budget-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: border-color 0.2s, transform 0.15s; }
+    .budget-card:hover { border-color: #3a3d46; transform: translateY(-2px); }
+    .budget-card.over { border-color: rgba(240,96,96,0.4); }
+
+    .bc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .bc-icon-name { display: flex; align-items: center; gap: 10px; }
+    .bc-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .bc-name { font-size: 15px; font-weight: 600; }
+    .bc-period { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .bc-menu-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 16px; transition: all 0.12s; }
+    .bc-menu-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .bc-amounts { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .bc-spent { font-family: var(--font-head); font-size: 22px; letter-spacing: -0.7px; }
+    .bc-limit { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align: right; line-height: 1.6; }
+    .bc-limit b { display: block; color: var(--text); font-size: 13px; }
+
+    .progress-track { height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+
+    .bc-footer { display: flex; justify-content: space-between; align-items: center; }
+    .bc-remaining { font-size: 12px; color: var(--muted); }
+    .bc-remaining b { color: var(--text); }
+    .bc-remaining.neg b { color: var(--danger); }
+
+    .badge { display: inline-flex; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; font-family: var(--font-mono); }
+    .badge-ok   { background: rgba(200,240,96,0.12); color: var(--accent); }
+    .badge-warn { background: rgba(240,160,96,0.12); color: var(--accent2); }
+    .badge-over { background: rgba(240,96,96,0.12);  color: var(--danger); }
+
+    .budget-card-add { background: transparent; border: 1px dashed var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; min-height: 180px; }
+    .budget-card-add:hover { border-color: var(--accent); background: rgba(200,240,96,0.04); }
+    .budget-card-add .plus { font-size: 28px; color: var(--muted); }
+    .budget-card-add .add-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .budget-card-add:hover .plus, .budget-card-add:hover .add-label { color: var(--accent); }
+
+    /* skeleton */
+    .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 28px; width: 100%; max-width: 420px; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+    .modal-title { font-family: var(--font-head); font-size: 22px; letter-spacing: -0.5px; margin-bottom: 20px; }
+    .form-field { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; }
+    .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px; font-size: 14px; color: var(--text); font-family: var(--font-body); outline: none; transition: border-color 0.15s; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+    .emoji-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .emoji-btn { width: 36px; height: 36px; border-radius: 8px; background: var(--surface2); border: 1px solid transparent; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+    .emoji-btn:hover, .emoji-btn.selected { border-color: var(--accent); background: rgba(200,240,96,0.08); }
+    .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+    .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+
+    /* dropdown menu */
+    .dropdown { position: relative; }
+    .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; min-width: 140px; z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item { display: block; width: 100%; padding: 8px 12px; border-radius: 7px; background: none; border: none; color: var(--text); font-size: 13px; font-family: var(--font-body); cursor: pointer; text-align: left; transition: background 0.12s; }
+    .dropdown-item:hover { background: var(--surface2); }
+    .dropdown-item.danger { color: var(--danger); }
+
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">fin<span>.</span>track</div>
+  <nav class="nav-group">
+    <div class="nav-label">Обзор</div>
+    <a href="/" class="nav-item"><span class="icon">◈</span> Дашборд</a>
+    <a href="/budgets" class="nav-item active"><span class="icon">◻</span> Бюджеты</a>
+    <a href="/transactions" class="nav-item"><span class="icon">↕</span> Транзакции</a>
+    <div class="nav-sep"></div>
+    <div class="nav-label">Настройки</div>
+    <a href="#" class="nav-item"><span class="icon">⊙</span> Категории</a>
+    <a href="#" class="nav-item"><span class="icon">⚙</span> Настройки</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">—</div>
+      <div>
+        <div class="user-name" id="user-name">...</div>
+        <div class="user-sub">Личный аккаунт</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <h1 class="page-title">
+      Бюджеты
+      <span class="sub" id="page-sub">Загрузка...</span>
+    </h1>
+    <button class="btn btn-primary" onclick="openModal()">+ Новый бюджет</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-strip">
+    <div class="summary-card">
+      <div class="label">Всего запланировано</div>
+      <div class="value" id="sum-planned">—</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Потрачено</div>
+      <div class="value" id="sum-spent" style="color:var(--accent2)">—</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">Осталось</div>
+      <div class="value" id="sum-left" style="color:var(--accent)">—</div>
+    </div>
+  </div>
+
+  <div class="budgets-grid" id="budgets-grid">
+    <!-- skeleton -->
+    <div class="budget-card"><div class="skeleton" style="height:140px;border-radius:10px"></div></div>
+    <div class="budget-card"><div class="skeleton" style="height:140px;border-radius:10px"></div></div>
+    <div class="budget-card"><div class="skeleton" style="height:140px;border-radius:10px"></div></div>
+  </div>
+
+</main>
+
+<!-- Modal: новый / редактировать бюджет -->
+<div class="modal-overlay" id="modal" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Новый бюджет</div>
+    <input type="hidden" id="edit-id" value="">
+
+    <div class="form-field">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="f-name" type="text" placeholder="Например: Продукты" />
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Лимит (₽)</label>
+        <input class="form-input" id="f-limit" type="number" placeholder="5000" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Период</label>
+        <select class="form-input" id="f-period">
+          <option value="monthly">Ежемесячно</option>
+          <option value="weekly">Еженедельно</option>
+          <option value="once">Разово</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Иконка</label>
+      <div class="emoji-row" id="emoji-row">
+        <button class="emoji-btn selected" data-emoji="🛒">🛒</button>
+        <button class="emoji-btn" data-emoji="☕">☕</button>
+        <button class="emoji-btn" data-emoji="🚇">🚇</button>
+        <button class="emoji-btn" data-emoji="🎬">🎬</button>
+        <button class="emoji-btn" data-emoji="💊">💊</button>
+        <button class="emoji-btn" data-emoji="🏋️">🏋️</button>
+        <button class="emoji-btn" data-emoji="✈️">✈️</button>
+        <button class="emoji-btn" data-emoji="👕">👕</button>
+        <button class="emoji-btn" data-emoji="📚">📚</button>
+        <button class="emoji-btn" data-emoji="🏠">🏠</button>
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Цвет</label>
+      <div class="color-picker" id="color-picker">
+        <div class="color-swatch selected" data-color="#c8f060" style="background:#c8f060"></div>
+        <div class="color-swatch" data-color="#f0a060" style="background:#f0a060"></div>
+        <div class="color-swatch" data-color="#60b8f0" style="background:#60b8f0"></div>
+        <div class="color-swatch" data-color="#f06060" style="background:#f06060"></div>
+        <div class="color-swatch" data-color="#c060f0" style="background:#c060f0"></div>
+        <div class="color-swatch" data-color="#60f0b8" style="background:#60f0b8"></div>
+        <div class="color-swatch" data-color="#f0d060" style="background:#f0d060"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="modal-submit" onclick="submitBudget()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fmt = n => Number(n).toLocaleString('ru-RU')
+
+  function progressColor(pct) {
+    if (pct >= 100) return '#f06060'
+    if (pct >= 75)  return '#f0a060'
+    return '#c8f060'
+  }
+
+  function badgeClass(pct) {
+    if (pct >= 100) return 'badge-over'
+    if (pct >= 75)  return 'badge-warn'
+    return 'badge-ok'
+  }
+
+  // ─── Рендер карточек ───────────────────────────────────────────
+  function renderBudgets(budgets) {
+    const grid = document.getElementById('budgets-grid')
+    let html = budgets.map(b => {
+      const pct   = Math.min(Math.round(b.spent / b.limit * 100), 100)
+      const color = b.color || progressColor(pct)
+      const left  = b.limit - b.spent
+      const over  = left < 0
+      return `
+        <div class="budget-card ${over ? 'over' : ''}">
+          <div class="bc-top">
+            <div class="bc-icon-name">
+              <div class="bc-icon" style="background:${color}22">${b.icon}</div>
+              <div>
+                <div class="bc-name">${b.name}</div>
+                <div class="bc-period">${b.period_label}</div>
+              </div>
+            </div>
+            <div class="dropdown">
+              <button class="bc-menu-btn" onclick="toggleMenu(event, 'menu-${b.id}')">⋯</button>
+              <div class="dropdown-menu" id="menu-${b.id}">
+                <button class="dropdown-item" onclick="editBudget(${JSON.stringify(b).replace(/"/g,'&quot;')})">✎ Редактировать</button>
+                <button class="dropdown-item danger" onclick="deleteBudget(${b.id})">✕ Удалить</button>
+              </div>
+            </div>
+          </div>
+          <div class="bc-amounts">
+            <div class="bc-spent" style="${over ? 'color:var(--danger)' : ''}">${fmt(b.spent)} ₽</div>
+            <div class="bc-limit">лимит<b>${fmt(b.limit)} ₽</b></div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${pct}%;background:${progressColor(pct)}"></div>
+          </div>
+          <div class="bc-footer">
+            <div class="bc-remaining ${over ? 'neg' : ''}">
+              ${over ? 'Перерасход:' : 'Осталось:'} <b>${over ? '−' : ''}${fmt(Math.abs(left))} ₽</b>
+            </div>
+            <span class="badge ${badgeClass(pct)}">${pct}%</span>
+          </div>
+        </div>`
+    }).join('')
+
+    // кнопка добавить
+    html += `<div class="budget-card-add" onclick="openModal()">
+      <div class="plus">+</div>
+      <div class="add-label">Добавить бюджет</div>
+    </div>`
+
+    grid.innerHTML = html
+  }
+
+  // ─── Загрузка ──────────────────────────────────────────────────
+  async function loadBudgets() {
+    try {
+      const res  = await fetch('/api/budgets')
+      const data = await res.json()
+
+      document.getElementById('user-avatar').textContent = data.user_name.slice(0,2).toUpperCase()
+      document.getElementById('user-name').textContent   = data.user_name
+      document.getElementById('page-sub').textContent    = `${data.budgets.length} активных бюджетов · ${data.month_period}`
+
+      document.getElementById('sum-planned').textContent = fmt(data.total_limit) + ' ₽'
+      document.getElementById('sum-spent').textContent   = fmt(data.total_spent) + ' ₽'
+      document.getElementById('sum-left').textContent    = fmt(data.total_limit - data.total_spent) + ' ₽'
+
+      renderBudgets(data.budgets)
+    } catch(e) {
+      console.error('Ошибка загрузки бюджетов:', e)
+    }
+  }
+
+  // ─── Создать / Редактировать ───────────────────────────────────
+  async function submitBudget() {
+    const id     = document.getElementById('edit-id').value
+    const method = id ? 'PUT' : 'POST'
+    const url    = id ? `/api/budgets/${id}` : '/api/budgets'
+
+    const body = {
+      name:   document.getElementById('f-name').value,
+      limit:  Number(document.getElementById('f-limit').value),
+      period: document.getElementById('f-period').value,
+      icon:   document.querySelector('#emoji-row .selected')?.dataset.emoji || '💰',
+      color:  document.querySelector('#color-picker .selected')?.dataset.color || '#c8f060',
+    }
+
+    await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) })
+    closeModal()
+    loadBudgets()
+  }
+
+  async function deleteBudget(id) {
+    if (!confirm('Удалить этот бюджет?')) return
+    await fetch(`/api/budgets/${id}`, { method: 'DELETE' })
+    loadBudgets()
+  }
+
+  // ─── Модалка ───────────────────────────────────────────────────
+  function openModal() {
+    document.getElementById('edit-id').value   = ''
+    document.getElementById('modal-title').textContent = 'Новый бюджет'
+    document.getElementById('modal-submit').textContent = 'Создать'
+    document.getElementById('f-name').value    = ''
+    document.getElementById('f-limit').value   = ''
+    document.getElementById('f-period').value  = 'monthly'
+    document.getElementById('modal').classList.add('open')
+  }
+
+  function editBudget(b) {
+    document.getElementById('edit-id').value   = b.id
+    document.getElementById('modal-title').textContent  = 'Редактировать бюджет'
+    document.getElementById('modal-submit').textContent = 'Сохранить'
+    document.getElementById('f-name').value    = b.name
+    document.getElementById('f-limit').value   = b.limit
+    document.getElementById('f-period').value  = b.period
+
+    document.querySelectorAll('#emoji-row .emoji-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.emoji === b.icon)
+    })
+    document.querySelectorAll('#color-picker .color-swatch').forEach(sw => {
+      sw.classList.toggle('selected', sw.dataset.color === b.color)
+    })
+    document.getElementById('modal').classList.add('open')
+  }
+
+  function closeModal() { document.getElementById('modal').classList.remove('open') }
+  function closeOnOverlay(e) { if (e.target.id === 'modal') closeModal() }
+
+  // ─── Пикеры ───────────────────────────────────────────────────
+  document.querySelectorAll('#emoji-row .emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#emoji-row .emoji-btn').forEach(b => b.classList.remove('selected'))
+      btn.classList.add('selected')
+    })
+  })
+  document.querySelectorAll('#color-picker .color-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('#color-picker .color-swatch').forEach(s => s.classList.remove('selected'))
+      sw.classList.add('selected')
+    })
+  })
+
+  // ─── Dropdown ─────────────────────────────────────────────────
+  function toggleMenu(e, id) {
+    e.stopPropagation()
+    document.querySelectorAll('.dropdown-menu').forEach(m => {
+      if (m.id !== id) m.classList.remove('open')
+    })
+    document.getElementById(id).classList.toggle('open')
+  }
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'))
+  })
+
+  loadBudgets()
+</script>
+</body>
+</html>

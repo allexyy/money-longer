@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Tracker — Новая транзакция</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0f11; --surface: #16181c; --surface2: #1e2127;
+      --border: #2a2d35; --text: #e8e6e0; --muted: #6b6f7a;
+      --accent: #c8f060; --accent2: #f0a060; --accent3: #60b8f0; --danger: #f06060;
+      --radius: 14px;
+      --font-head: 'DM Serif Display', serif;
+      --font-body: 'Instrument Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+    html { font-size: 16px; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+
+    .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+    .logo { padding: 0 24px 32px; font-family: var(--font-head); font-size: 22px; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .nav-group { padding: 0 12px; flex: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); padding: 0 12px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none; transition: all 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent); color: #0e0f11; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-sep { height: 1px; background: var(--border); margin: 12px 12px; }
+    .sidebar-bottom { padding: 0 12px; }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface2); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #0e0f11; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-sub { font-size: 11px; color: var(--muted); }
+
+    .main { flex: 1; padding: 36px 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+
+    .form-wrap {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; width: 100%; }
+    .back-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); text-decoration: none; font-size: 16px; transition: all 0.15s; flex-shrink: 0; }
+    .back-btn:hover { background: var(--surface2); color: var(--text); }
+    .page-title { font-family: var(--font-head); font-size: 32px; letter-spacing: -1px; line-height: 1.1; }
+    .page-title .sub { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--muted); display: block; margin-top: 4px; }
+
+    /* Type toggle */
+    .type-toggle { display: flex; gap: 0; background: var(--surface2); border-radius: 12px; padding: 5px; margin-bottom: 28px; }
+    .type-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; background: none; font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; color: var(--muted); transition: all 0.2s; }
+    .type-btn.active-expense { background: rgba(240,96,96,0.15); color: var(--danger); }
+    .type-btn.active-income  { background: rgba(200,240,96,0.15); color: var(--accent); }
+
+    /* Amount hero */
+    .amount-hero { text-align: center; margin-bottom: 32px; }
+    .amount-label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    .amount-input-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .amount-currency { font-family: var(--font-head); font-size: 36px; color: var(--muted); }
+    .amount-input {
+      font-family: var(--font-head);
+      font-size: 52px;
+      letter-spacing: -2px;
+      background: none;
+      border: none;
+      color: var(--text);
+      outline: none;
+      width: 260px;
+      text-align: center;
+    }
+    .amount-input::placeholder { color: var(--border); }
+    .amount-input.expense { color: var(--danger); }
+    .amount-input.income  { color: var(--accent); }
+    .amount-underline { height: 2px; background: var(--border); border-radius: 99px; margin: 0 auto; width: 280px; transition: background 0.2s; }
+    .amount-underline.expense { background: var(--danger); }
+    .amount-underline.income  { background: var(--accent); }
+
+    /* Form card */
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+    .form-field { margin-bottom: 18px; }
+    .form-field:last-child { margin-bottom: 0; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 7px; }
+    .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 11px 14px; font-size: 14px; color: var(--text); font-family: var(--font-body); outline: none; transition: border-color 0.15s; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Budget select custom */
+    .budget-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+    .budget-option {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px; border-radius: 10px;
+      background: var(--surface2); border: 1px solid transparent;
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .budget-option:hover { border-color: var(--border); }
+    .budget-option.selected { border-color: var(--accent); background: rgba(200,240,96,0.07); }
+    .budget-option .b-icon { font-size: 22px; }
+    .budget-option .b-name { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+    .budget-option.selected .b-name { color: var(--text); }
+    .budget-option .b-left { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+
+    /* Submit */
+    .form-actions { display: flex; gap: 12px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 13px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #0e0f11; flex: 1; }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface2); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.4); transition: transform 0.3s ease; z-index: 200; display: flex; align-items: center; gap: 8px; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(200,240,96,0.3); color: var(--accent); }
+    .toast.error   { border-color: rgba(240,96,96,0.3);  color: var(--danger); }
+
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">fin<span>.</span>track</div>
+  <nav class="nav-group">
+    <div class="nav-label">Обзор</div>
+    <a href="/" class="nav-item"><span class="icon">◈</span> Дашборд</a>
+    <a href="/budgets" class="nav-item"><span class="icon">◻</span> Бюджеты</a>
+    <a href="/transactions" class="nav-item active"><span class="icon">↕</span> Транзакции</a>
+    <div class="nav-sep"></div>
+    <div class="nav-label">Настройки</div>
+    <a href="#" class="nav-item"><span class="icon">⊙</span> Категории</a>
+    <a href="#" class="nav-item"><span class="icon">⚙</span> Настройки</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">—</div>
+      <div>
+        <div class="user-name" id="user-name">...</div>
+        <div class="user-sub">Личный аккаунт</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="form-wrap">
+
+    <div class="page-header">
+      <a href="/transactions" class="back-btn">←</a>
+      <h1 class="page-title">
+        Новая транзакция
+        <span class="sub">Заполните данные об операции</span>
+      </h1>
+    </div>
+
+    <!-- Тип -->
+    <div class="type-toggle">
+      <button class="type-btn active-expense" id="btn-expense" onclick="setType('expense')">↑ Расход</button>
+      <button class="type-btn"               id="btn-income"  onclick="setType('income')">↓ Доход</button>
+    </div>
+
+    <!-- Сумма -->
+    <div class="amount-hero">
+      <div class="amount-label">Сумма</div>
+      <div class="amount-input-wrap">
+        <span class="amount-currency">₽</span>
+        <input class="amount-input expense" id="f-amount" type="number" placeholder="0" min="0" step="1" />
+      </div>
+      <div class="amount-underline expense" id="amount-underline"></div>
+    </div>
+
+    <!-- Основные поля -->
+    <div class="form-card">
+      <div class="form-field">
+        <label class="form-label">Название</label>
+        <input class="form-input" id="f-name" type="text" placeholder="Например: Пятёрочка" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Дата</label>
+          <input class="form-input" id="f-date" type="date" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Время (опц.)</label>
+          <input class="form-input" id="f-time" type="time" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Заметка</label>
+        <input class="form-input" id="f-note" type="text" placeholder="Молоко, хлеб, яйца..." />
+      </div>
+    </div>
+
+    <!-- Выбор бюджета -->
+    <div class="form-card" id="budget-card">
+      <div class="form-field" style="margin-bottom:0">
+        <label class="form-label">Бюджет</label>
+        <div class="budget-options" id="budget-options">
+          <div style="color:var(--muted);font-size:13px">Загрузка...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Действия -->
+    <div class="form-actions">
+      <a href="/transactions" class="btn btn-ghost">Отмена</a>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitTransaction()">
+        Сохранить расход
+      </button>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const fmt = n => Number(n).toLocaleString('ru-RU')
+
+  let txType      = 'expense'
+  let selectedBudgetId = null
+  let budgets     = []
+
+  // ─── Тип транзакции ────────────────────────────────────────────
+  function setType(type) {
+    txType = type
+    document.getElementById('btn-expense').className =
+      'type-btn' + (type === 'expense' ? ' active-expense' : '')
+    document.getElementById('btn-income').className =
+      'type-btn' + (type === 'income' ? ' active-income' : '')
+
+    const amtInput = document.getElementById('f-amount')
+    const underline = document.getElementById('amount-underline')
+    amtInput.className    = 'amount-input ' + type
+    underline.className   = 'amount-underline ' + type
+
+    document.getElementById('budget-card').style.display =
+      type === 'expense' ? '' : 'none'
+
+    document.getElementById('submit-btn').textContent =
+      type === 'expense' ? 'Сохранить расход' : 'Сохранить доход'
+  }
+
+  // ─── Рендер бюджетов ───────────────────────────────────────────
+  function renderBudgetOptions(list) {
+    const wrap = document.getElementById('budget-options')
+    wrap.innerHTML = list.map(b => {
+      const left = b.limit - b.spent
+      return `
+        <div class="budget-option" data-id="${b.id}" onclick="selectBudget(${b.id})">
+          <span class="b-icon">${b.icon}</span>
+          <span class="b-name">${b.name}</span>
+          <span class="b-left">${fmt(left)} ₽</span>
+        </div>`
+    }).join('')
+  }
+
+  function selectBudget(id) {
+    selectedBudgetId = id
+    document.querySelectorAll('.budget-option').forEach(el => {
+      el.classList.toggle('selected', Number(el.dataset.id) === id)
+    })
+  }
+
+  // ─── Загрузка данных формы ─────────────────────────────────────
+  async function loadFormData() {
+    try {
+      const res  = await fetch('/api/budgets')
+      const data = await res.json()
+
+      document.getElementById('user-avatar').textContent = data.user_name.slice(0,2).toUpperCase()
+      document.getElementById('user-name').textContent   = data.user_name
+
+      budgets = data.budgets
+      renderBudgetOptions(budgets)
+    } catch(e) {
+      console.error('Ошибка загрузки бюджетов:', e)
+    }
+  }
+
+  // ─── Отправка ──────────────────────────────────────────────────
+  async function submitTransaction() {
+    const amount = Number(document.getElementById('f-amount').value)
+    const name   = document.getElementById('f-name').value.trim()
+    const date   = document.getElementById('f-date').value
+    const time   = document.getElementById('f-time').value
+    const note   = document.getElementById('f-note').value.trim()
+
+    if (!amount || amount <= 0) { showToast('Введите сумму', 'error'); return }
+    if (!name)                  { showToast('Введите название', 'error'); return }
+    if (!date)                  { showToast('Выберите дату', 'error'); return }
+    if (txType === 'expense' && !selectedBudgetId) {
+      showToast('Выберите бюджет', 'error'); return
+    }
+
+    const body = {
+      amount,
+      name,
+      note,
+      is_income: txType === 'income',
+      budget_id: txType === 'expense' ? selectedBudgetId : null,
+      date: time ? `${date}T${time}` : date,
+    }
+
+    try {
+      const btn = document.getElementById('submit-btn')
+      btn.disabled = true
+      btn.textContent = 'Сохранение...'
+
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) throw new Error(await res.text())
+
+      showToast('Транзакция добавлена ✓', 'success')
+      setTimeout(() => window.location = '/transactions', 800)
+
+    } catch(e) {
+      showToast('Ошибка: ' + e.message, 'error')
+      const btn = document.getElementById('submit-btn')
+      btn.disabled = false
+      btn.textContent = txType === 'expense' ? 'Сохранить расход' : 'Сохранить доход'
+    }
+  }
+
+  // ─── Toast ─────────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast')
+    t.textContent = msg
+    t.className = `toast ${type} show`
+    setTimeout(() => t.classList.remove('show'), 2500)
+  }
+
+  // ─── Инициализация ─────────────────────────────────────────────
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0]
+
+  loadFormData()
+</script>
+</body>
+</html>

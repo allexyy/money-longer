@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Tracker — Транзакции</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0f11; --surface: #16181c; --surface2: #1e2127;
+      --border: #2a2d35; --text: #e8e6e0; --muted: #6b6f7a;
+      --accent: #c8f060; --accent2: #f0a060; --accent3: #60b8f0; --danger: #f06060;
+      --radius: 14px;
+      --font-head: 'DM Serif Display', serif;
+      --font-body: 'Instrument Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+    html { font-size: 16px; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+
+    .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+    .logo { padding: 0 24px 32px; font-family: var(--font-head); font-size: 22px; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .nav-group { padding: 0 12px; flex: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); padding: 0 12px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none; transition: all 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--accent); color: #0e0f11; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-sep { height: 1px; background: var(--border); margin: 12px 12px; }
+    .sidebar-bottom { padding: 0 12px; }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface2); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #0e0f11; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-sub { font-size: 11px; color: var(--muted); }
+
+    .main { flex: 1; padding: 36px 40px; overflow-y: auto; min-width: 0; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+    .page-title { font-family: var(--font-head); font-size: 32px; letter-spacing: -1px; line-height: 1.1; }
+    .page-title .sub { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--muted); display: block; margin-top: 4px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 9px; font-size: 13.5px; font-weight: 600; font-family: var(--font-body); cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #0e0f11; }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+
+    .filters-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-wrap { flex: 1; min-width: 200px; position: relative; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+    .search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px 10px 36px; font-size: 13.5px; color: var(--text); font-family: var(--font-body); outline: none; transition: border-color 0.15s; }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
+    .filter-select { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 10px 32px 10px 14px; font-size: 13.5px; color: var(--text); font-family: var(--font-body); outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6f7a'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .filter-select:focus { border-color: var(--accent); }
+
+    .tab-chips { display: flex; gap: 6px; margin-bottom: 20px; }
+    .chip { padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.15s; font-family: var(--font-body); }
+    .chip:hover { background: var(--surface2); color: var(--text); }
+    .chip.active { background: var(--accent); color: #0e0f11; border-color: var(--accent); }
+
+    .tx-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    thead th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+    thead th:last-child { text-align: right; }
+
+    .date-row td { padding: 10px 16px 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; background: var(--bg); border-top: 1px solid var(--border); }
+    tbody tr.tx-row { border-bottom: 1px solid var(--border); transition: background 0.12s; cursor: pointer; }
+    tbody tr.tx-row:last-child { border-bottom: none; }
+    tbody tr.tx-row:hover { background: var(--surface2); }
+    td { padding: 12px 16px; vertical-align: middle; }
+
+    .td-icon-name { display: flex; align-items: center; gap: 12px; }
+    .tx-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .tx-name { font-size: 13.5px; font-weight: 500; }
+    .tx-note { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+
+    .budget-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+    .budget-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    .tx-amount-cell { font-family: var(--font-mono); font-size: 14px; font-weight: 500; text-align: right; white-space: nowrap; }
+    .tx-amount-cell.expense { color: var(--danger); }
+    .tx-amount-cell.income  { color: var(--accent); }
+
+    .tx-actions { display: flex; gap: 6px; justify-content: flex-end; opacity: 0; transition: opacity 0.15s; }
+    tbody tr.tx-row:hover .tx-actions { opacity: 1; }
+    .icon-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: var(--muted); cursor: pointer; font-size: 13px; transition: all 0.12s; }
+    .icon-btn:hover { background: var(--surface); color: var(--text); }
+    .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+
+    .pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-top: 1px solid var(--border); }
+    .page-info { font-size: 12.5px; color: var(--muted); }
+    .page-btns { display: flex; gap: 4px; }
+    .page-btn { width: 32px; height: 32px; border-radius: 7px; background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 13px; font-family: var(--font-mono); transition: all 0.12s; display: flex; align-items: center; justify-content: center; }
+    .page-btn:hover { background: var(--surface2); color: var(--text); }
+    .page-btn.active { background: var(--accent); color: #0e0f11; border-color: var(--accent); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    .skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">fin<span>.</span>track</div>
+  <nav class="nav-group">
+    <div class="nav-label">Обзор</div>
+    <a href="/" class="nav-item"><span class="icon">◈</span> Дашборд</a>
+    <a href="/budgets" class="nav-item"><span class="icon">◻</span> Бюджеты</a>
+    <a href="/transactions" class="nav-item active"><span class="icon">↕</span> Транзакции</a>
+    <div class="nav-sep"></div>
+    <div class="nav-label">Настройки</div>
+    <a href="#" class="nav-item"><span class="icon">⊙</span> Категории</a>
+    <a href="#" class="nav-item"><span class="icon">⚙</span> Настройки</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">—</div>
+      <div>
+        <div class="user-name" id="user-name">...</div>
+        <div class="user-sub">Личный аккаунт</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <h1 class="page-title">
+      Транзакции
+      <span class="sub" id="page-sub">Загрузка...</span>
+    </h1>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" onclick="exportCSV()">↓ Экспорт</button>
+      <a href="/transactions/new" class="btn btn-primary">+ Добавить</a>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search" type="text" placeholder="Поиск по названию..." oninput="applyFilters()" />
+    </div>
+    <select class="filter-select" id="filter-budget" onchange="applyFilters()">
+      <option value="">Все бюджеты</option>
+    </select>
+    <select class="filter-select" id="filter-month" onchange="applyFilters()">
+      <option value="">Все месяцы</option>
+    </select>
+  </div>
+
+  <div class="tab-chips">
+    <button class="chip active" data-type="all"      onclick="setChip(this)">Все</button>
+    <button class="chip"        data-type="expense"  onclick="setChip(this)">Расходы</button>
+    <button class="chip"        data-type="income"   onclick="setChip(this)">Доходы</button>
+  </div>
+
+  <div class="tx-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Операция</th>
+          <th>Бюджет</th>
+          <th>Дата</th>
+          <th style="text-align:right">Сумма</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tx-tbody">
+        <tr><td colspan="5"><div class="skeleton" style="height:40px;margin:8px 0"></div></td></tr>
+        <tr><td colspan="5"><div class="skeleton" style="height:40px;margin:8px 0"></div></td></tr>
+        <tr><td colspan="5"><div class="skeleton" style="height:40px;margin:8px 0"></div></td></tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <div class="page-info" id="page-info">—</div>
+      <div class="page-btns" id="page-btns"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const fmt = n => Number(n).toLocaleString('ru-RU')
+
+  let allTx      = []
+  let filtered   = []
+  let currentPage = 1
+  const PER_PAGE  = 15
+  let activeType  = 'all'
+
+  // ─── Загрузка ──────────────────────────────────────────────────
+  async function loadTransactions() {
+    try {
+      const res  = await fetch('/api/transactions')
+      const data = await res.json()
+
+      document.getElementById('user-avatar').textContent = data.user_name.slice(0,2).toUpperCase()
+      document.getElementById('user-name').textContent   = data.user_name
+
+      allTx = data.transactions
+      populateBudgetFilter(data.budgets)
+      populateMonthFilter(data.months)
+      applyFilters()
+    } catch(e) {
+      console.error('Ошибка загрузки транзакций:', e)
+    }
+  }
+
+  function populateBudgetFilter(budgets) {
+    const sel = document.getElementById('filter-budget')
+    budgets.forEach(b => {
+      const opt = document.createElement('option')
+      opt.value = b.id
+      opt.textContent = b.name
+      sel.appendChild(opt)
+    })
+  }
+
+  function populateMonthFilter(months) {
+    const sel = document.getElementById('filter-month')
+    months.forEach(m => {
+      const opt = document.createElement('option')
+      opt.value = m.value   // "2026-06"
+      opt.textContent = m.label  // "Июнь 2026"
+      sel.appendChild(opt)
+    })
+  }
+
+  // ─── Фильтры ───────────────────────────────────────────────────
+  function applyFilters() {
+    const search    = document.getElementById('search').value.toLowerCase()
+    const budgetId  = document.getElementById('filter-budget').value
+    const month     = document.getElementById('filter-month').value
+
+    filtered = allTx.filter(tx => {
+      if (activeType === 'expense' && tx.is_income)  return false
+      if (activeType === 'income'  && !tx.is_income) return false
+      if (search   && !tx.name.toLowerCase().includes(search)) return false
+      if (budgetId && String(tx.budget_id) !== budgetId)       return false
+      if (month    && !tx.date.startsWith(month))              return false
+      return true
+    })
+
+    currentPage = 1
+    renderTable()
+  }
+
+  function setChip(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+    el.classList.add('active')
+    activeType = el.dataset.type
+    applyFilters()
+  }
+
+  // ─── Рендер таблицы ────────────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('tx-tbody')
+    const start = (currentPage - 1) * PER_PAGE
+    const page  = filtered.slice(start, start + PER_PAGE)
+
+    document.getElementById('page-sub').textContent =
+      `${filtered.length} операций`
+
+    if (page.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">
+        <div class="empty-state"><div class="icon">🔍</div><p>Операции не найдены</p></div>
+      </td></tr>`
+      document.getElementById('page-info').textContent = '0 операций'
+      document.getElementById('page-btns').innerHTML = ''
+      return
+    }
+
+    // Группируем по дате
+    const groups = {}
+    page.forEach(tx => {
+      const d = tx.date_label || tx.date
+      if (!groups[d]) groups[d] = []
+      groups[d].push(tx)
+    })
+
+    let html = ''
+    Object.entries(groups).forEach(([date, txs]) => {
+      html += `<tr class="date-row"><td colspan="5">${date}</td></tr>`
+      txs.forEach(tx => {
+        html += `
+          <tr class="tx-row" onclick="window.location='/transactions/${tx.id}/edit'">
+            <td><div class="td-icon-name">
+              <div class="tx-icon">${tx.icon}</div>
+              <div>
+                <div class="tx-name">${tx.name}</div>
+                <div class="tx-note">${tx.note || ''}</div>
+              </div>
+            </div></td>
+            <td>
+              <span class="budget-tag" style="background:${tx.budget_color}22;color:${tx.budget_color}">
+                <span class="budget-dot" style="background:${tx.budget_color}"></span>${tx.budget_name}
+              </span>
+            </td>
+            <td style="font-family:var(--font-mono);font-size:12.5px;color:var(--muted)">${tx.date_display}</td>
+            <td class="tx-amount-cell ${tx.is_income ? 'income' : 'expense'}">
+              ${tx.is_income ? '+' : '−'}${fmt(tx.amount)} ₽
+            </td>
+            <td>
+              <div class="tx-actions">
+                <button class="icon-btn" onclick="event.stopPropagation();editTx(${tx.id})">✎</button>
+                <button class="icon-btn del" onclick="event.stopPropagation();deleteTx(${tx.id})">✕</button>
+              </div>
+            </td>
+          </tr>`
+      })
+    })
+    tbody.innerHTML = html
+
+    // Пагинация
+    const total = filtered.length
+    const pages = Math.ceil(total / PER_PAGE)
+    document.getElementById('page-info').textContent =
+      `Показано ${start + 1}–${Math.min(start + PER_PAGE, total)} из ${total}`
+
+    let btns = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`
+    for (let i = 1; i <= pages; i++) {
+      if (pages > 7 && i > 3 && i < pages - 1 && Math.abs(i - currentPage) > 1) {
+        if (i === 4) btns += `<button class="page-btn" disabled>…</button>`
+        continue
+      }
+      btns += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`
+    }
+    btns += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`
+    document.getElementById('page-btns').innerHTML = btns
+  }
+
+  function goPage(p) {
+    const pages = Math.ceil(filtered.length / PER_PAGE)
+    if (p < 1 || p > pages) return
+    currentPage = p
+    renderTable()
+  }
+
+  // ─── Действия ──────────────────────────────────────────────────
+  function editTx(id) { window.location = `/transactions/${id}/edit` }
+
+  async function deleteTx(id) {
+    if (!confirm('Удалить транзакцию?')) return
+    await fetch(`/api/transactions/${id}`, { method: 'DELETE' })
+    loadTransactions()
+  }
+
+  function exportCSV() {
+    const rows = [['Название','Бюджет','Дата','Сумма','Тип']]
+    filtered.forEach(tx => {
+      rows.push([tx.name, tx.budget_name, tx.date, tx.amount, tx.is_income ? 'Доход' : 'Расход'])
+    })
+    const csv  = rows.map(r => r.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a'); a.href = url; a.download = 'transactions.csv'; a.click()
+  }
+
+  loadTransactions()
+</script>
+</body>
+</html>
